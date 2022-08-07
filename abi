@@ -129,7 +129,7 @@ case "$OS" in
 
 	"parabola")
 		printf "Select your init system:\n1) OpenRC\n2) SystemD (default)\n-> " && read -r INIT
-		if [[ "$INIT" -eq 2 ]]; then
+		if [ "$INIT" -eq 2 ]; then
 			INIT="openrc"
 		else
 			INIT="systemd"
@@ -633,6 +633,7 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 				"$CHROOT" "grub-mkconfig -o /boot/grub/grub.cfg"
 		esac
 		clear
+	fi
 fi
 clear
 
@@ -691,6 +692,7 @@ if [ "$OS" = "artix" ]; then
 		echo "Updating Arch Linux Repos..."
 		grep -vi ^# /mnt/etc/pacman.d/mirrorlist-arch.backup | rankmirrors - > /mnt/etc/pacman.d/mirrorlist-arch
 		clear
+	fi
 fi
 
 if [ "$OS" != "parabola" ]; then
