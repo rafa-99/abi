@@ -21,30 +21,6 @@ case "$OS" in
 	"artix")
 		pacman-key --init
 		pacman-key --populate artix
-		;;
-
-	"parabola")
-		# Key errors
-		sed -i s:'SigLevel    = Required DatabaseOptional':'SigLevel    = Never':g /etc/pacman.conf
-		sed -i s:'LocalFileSigLevel = Optional':'LocalFileSigLevel = Never':g /etc/pacman.conf
-		yes | pacman -U https://www.parabola.nu/packages/core/i686/archlinux32-keyring-transition/download/
-		yes | pacman -Sy archlinux-keyring archlinux32-keyring archlinuxarm-keyring parabola-keyring
-		clear
-
-		# Killing GPG agent that blocks pacman-key --init
-		if pgrep gpg-agent
-		then
-			pkill gpg-agent
-		fi
-
-		# Reloading GPG Keys
-		rm -rf /etc/pacman.d/gnupg
-		pacman-key --init
-		pacman-key --refresh-keys
-		pacman-key --populate parabola archlinux archlinuxarm archlinux32
-
-		# Automatically assuming yes to all questions relative to replacing old libs
-		yes | pacman -S util-linux-libs glibc
 esac
 clear
 
@@ -82,36 +58,19 @@ printf "Which Timezone? (eg America/New_York)\n-> " && read -r TIMEZONE
 clear
 
 ## Reading Kernel
-case "$OS" in
-	"parabola")
-		printf "Select your kernel:\n1)linux-libre\n2)linux-libre-hardened\n3)linux-libre-lts [Recommended](Default)\n-> " && read -r KERNEL
-		case "$KERNEL" in
-			1)
-				KERNEL="linux-libre"
-				;;
-			2)
-				KERNEL="linux-libre-hardened"
-				;;
-			*)
-				KERNEL="linux-libre-lts"
-		esac
+printf "Select your kernel:\n1)linux\n2)linux-hardened\n3)linux-lts [Recommended](Default)\n4)linux-zen\n-> " && read -r KERNEL
+case "$KERNEL" in
+	1)
+		KERNEL="linux"
 		;;
-
+	2)
+		KERNEL="linux-hardened"
+		;;
+	4)
+		KERNEL="linux-zen"
+		;;
 	*)
-		printf "Select your kernel:\n1)linux\n2)linux-hardened\n3)linux-lts [Recommended](Default)\n4)linux-zen\n-> " && read -r KERNEL
-		case "$KERNEL" in
-			1)
-				KERNEL="linux"
-				;;
-			2)
-				KERNEL="linux-hardened"
-				;;
-			4)
-				KERNEL="linux-zen"
-				;;
-			*)
-				KERNEL="linux-lts"
-		esac
+		KERNEL="linux-lts"
 esac
 clear
 
@@ -132,15 +91,6 @@ case "$OS" in
 			*)
 				INIT="openrc"
 		esac
-		;;
-
-	"parabola")
-		printf "Select your init system:\n1) OpenRC\n2) SystemD (default)\n-> " && read -r INIT
-		if [ "$INIT" -eq 1 ]; then
-			INIT="openrc"
-		else
-			INIT="systemd"
-		fi
 		;;
 
 	*)
@@ -190,6 +140,7 @@ fi
 clear
 
 ## Disk Encryption
+lsblk
 printf "Do you wish to use any encrypted parition? [Y/n]" && read -r ENCRYPTED
 if [ "$ENCRYPTED" != "N" ] && [ "$ENCRYPTED" != "n" ]; then
 	pacman --noconfirm --needed -Sy cryptsetup
@@ -263,11 +214,7 @@ if [ "$OS" = "artix" ]; then
 	esac
 	fstabgen -U /mnt >> /mnt/etc/fstab
 else
-	if [ "$OS" = "parabola" ] && [ "$INIT" = "openrc" ]; then
-		pacstrap /mnt base libelogind udev-init-scripts elogind "$KERNEL"
-	else
-		pacstrap /mnt base "$KERNEL"
-	fi
+	pacstrap /mnt base "$KERNEL"
 	genfstab -U /mnt >> /mnt/etc/fstab
 fi
 clear
@@ -306,16 +253,10 @@ if [ "$INIT" = "openrc" ]; then
 	$CHROOT "echo hostname=\"$HOSTNAME\" > /etc/conf.d/hostname"
 	sed -i s:'keymap="us"':keymap="$KEYMAP":g /mnt/etc/conf.d/keymaps
 
-	if [ "$OS" = "parabola" ]; then
-		sed -i 's:^#.nonsystemd\]:\[nonsystemd\]\nInclude \= \/etc\/pacman.d\/mirrorlist:g' /mnt/etc/pacman.conf
-	fi
 else
+
 	 $CHROOT "echo $HOSTNAME > /etc/hostname"
 	 $CHROOT "echo KEYMAP=$KEYMAP > /etc/vconsole.conf"
-fi
-
-if [ "$OS" = "parabola" ]; then
-	sed -i 's:^#.nonprism\]:\[nonprism\]\nInclude \= \/etc\/pacman.d\/mirrorlist:g' /mnt/etc/pacman.conf
 fi
 
 $CHROOT "echo LANG=$LOCALE.UTF-8 > /etc/locale.conf"
@@ -414,11 +355,7 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 
 					"openrc")
 
-						if [ "$OS" != "parabola" ]; then
-							$CHROOT "pacman --noconfirm --needed -S networkmanager-openrc && rc-update add NetworkManager default"
-						fi
-
-						$CHROOT "rc-update add NetworkManager default"
+						$CHROOT "pacman --noconfirm --needed -S networkmanager-openrc && rc-update add NetworkManager default"
 						;;
 
 					"runit")
@@ -468,11 +405,7 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 	# Installation of Proprietary Blobs
 	printf "Do you want to install support for Proprietary Firmware? [Y/n]" && read -r BLOBS
 	if [ "$BLOBS" != "N" ] && [ "$BLOBS" != "n" ]; then
-		if [ "$OS" = parabola ]; then
-			$CHROOT "pacman --needed --noconfirm -S linux-libre-firmware"
-		else
-			$CHROOT "pacman --needed --noconfirm -S linux-firmware"
-		fi
+		$CHROOT "pacman --needed --noconfirm -S linux-firmware"
 	fi
 	clear
 
@@ -547,12 +480,7 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 	clear
 
 	# Installation of a Display Manager
-	if [ "$OS" = "parabola" ]; then
-		printf "Select your desired Display Manager\n1) Gdm (Doesnt work)\n2) Lightdm\n3) Sddm\n4) None\n-> " && read -r DISPLAY && clear
-	else
-		printf "Select your desired Display Manager\n1) Gdm\n2) Lightdm\n3) Sddm\n4) None\n-> " && read -r DISPLAY && clear
-	fi
-
+	printf "Select your desired Display Manager\n1) Gdm\n2) Lightdm\n3) Sddm\n4) None\n-> " && read -r DISPLAY && clear
 	case "$DISPLAY" in
 		1)
 			$CHROOT "pacman --needed --noconfirm -S gdm"
@@ -710,48 +638,46 @@ if [ "$OS" = "artix" ]; then
 	fi
 fi
 
-if [ "$OS" != "parabola" ]; then
-	if [ "$OS" = "arch" ]; then
-		printf "Do you want to multilib repo? [Y/n]" && read -r MULTI
-		if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
-			printf "[multilib]\nSigLevel = PackageRequired\nInclude = /etc/pacman.d/mirrorlist" >> /mnt/etc/pacman.conf
-			$CHROOT "pacman --needed --noconfirm -Syu"
-		fi
-	else
-		if [ "$OS" = "artix" ]; then
-			if [ "$ARCH" != "N" ] && [ "$ARCH" != "n" ]; then
-				printf "Do you want to multilib repo? [Y/n]" && read -r MULTI
-				if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
-					printf "\n[multilib]\nInclude = /etc/pacman.d/mirrorlist-arch" >> /mnt/etc/pacman.conf
-					$CHROOT "pacman --needed --noconfirm -Syu"
-				fi
+if [ "$OS" = "arch" ]; then
+	printf "Do you want to multilib repo? [Y/n]" && read -r MULTI
+	if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
+		printf "[multilib]\nSigLevel = PackageRequired\nInclude = /etc/pacman.d/mirrorlist" >> /mnt/etc/pacman.conf
+		$CHROOT "pacman --needed --noconfirm -Syu"
+	fi
+else
+	if [ "$OS" = "artix" ]; then
+		if [ "$ARCH" != "N" ] && [ "$ARCH" != "n" ]; then
+			printf "Do you want to multilib repo? [Y/n]" && read -r MULTI
+			if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
+				printf "\n[multilib]\nInclude = /etc/pacman.d/mirrorlist-arch" >> /mnt/etc/pacman.conf
+				$CHROOT "pacman --needed --noconfirm -Syu"
 			fi
 		fi
 	fi
-	clear
-
-	# Gaming Related Stuff
-	if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
-		printf "Do you want to install Gaming software and related dependencies? (steam, lutris, 32 bit libraries) [Y/n]" && read -r GAME
-		if [ "$GAME" != "N" ] && [ "$GAME" != "n" ]; then
-			$CHROOT "pacman --needed --noconfirm -S wine-staging wine-mono wine-gecko winetricks giflib lib32-giflib libpng lib32-libpng libldap lib32-libldap gnutls lib32-gnutls mpg123 lib32-mpg123 openal lib32-openal v4l-utils lib32-v4l-utils libpulse lib32-libpulse libgpg-error lib32-libgpg-error alsa-plugins lib32-alsa-plugins alsa-lib lib32-alsa-lib libjpeg-turbo lib32-libjpeg-turbo sqlite lib32-sqlite libxcomposite lib32-libxcomposite libxinerama lib32-libgcrypt libgcrypt lib32-libxinerama ncurses lib32-ncurses opencl-icd-loader lib32-opencl-icd-loader libxslt lib32-libxslt libva lib32-libva gtk3 lib32-gtk3 gst-plugins-base-libs lib32-gst-plugins-base-libs vulkan-icd-loader lib32-vulkan-icd-loader lutris steam"
-			clear
-
-			printf "Select a graphics card brand:\n1)AMD\n2)Intel\n3)NVIDIA\n-> " && read -r GPU
-			case "$GPU" in
-				1)
-					$CHROOT "pacman --noconfirm --needed -S lib32-mesa vulkan-radeon lib32-vulkan-radeon vulkan-icd-loader lib32-vulkan-icd-loader"
-					;;
-				2)
-					$CHROOT "pacman --noconfirm -S lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-icd-loader lib32-vulkan-icd-loader"
-					;;
-				3)
-					$CHROOT "pacman --noconfirm -S nvidia nvidia-utils lib32-nvidia-utils nvidia-settings vulkan-icd-loader lib32-vulkan-icd-loader"
-			esac
-		fi
-	fi
-	clear
 fi
+clear
+
+# Gaming Related Stuff
+if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
+	printf "Do you want to install Gaming software and related dependencies? (steam, lutris, 32 bit libraries) [Y/n]" && read -r GAME
+	if [ "$GAME" != "N" ] && [ "$GAME" != "n" ]; then
+		$CHROOT "pacman --needed --noconfirm -S wine-staging wine-mono wine-gecko winetricks giflib lib32-giflib libpng lib32-libpng libldap lib32-libldap gnutls lib32-gnutls mpg123 lib32-mpg123 openal lib32-openal v4l-utils lib32-v4l-utils libpulse lib32-libpulse libgpg-error lib32-libgpg-error alsa-plugins lib32-alsa-plugins alsa-lib lib32-alsa-lib libjpeg-turbo lib32-libjpeg-turbo sqlite lib32-sqlite libxcomposite lib32-libxcomposite libxinerama lib32-libgcrypt libgcrypt lib32-libxinerama ncurses lib32-ncurses opencl-icd-loader lib32-opencl-icd-loader libxslt lib32-libxslt libva lib32-libva gtk3 lib32-gtk3 gst-plugins-base-libs lib32-gst-plugins-base-libs vulkan-icd-loader lib32-vulkan-icd-loader lutris steam"
+		clear
+
+		printf "Select a graphics card brand:\n1)AMD\n2)Intel\n3)NVIDIA\n-> " && read -r GPU
+		case "$GPU" in
+			1)
+				$CHROOT "pacman --noconfirm --needed -S lib32-mesa vulkan-radeon lib32-vulkan-radeon vulkan-icd-loader lib32-vulkan-icd-loader"
+				;;
+			2)
+				$CHROOT "pacman --noconfirm -S lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-icd-loader lib32-vulkan-icd-loader"
+				;;
+			3)
+				$CHROOT "pacman --noconfirm -S nvidia nvidia-utils lib32-nvidia-utils nvidia-settings vulkan-icd-loader lib32-vulkan-icd-loader"
+		esac
+	fi
+fi
+clear
 
 # Office Suite
 printf "Do you want to install LibreOffice Suite? [Y/n]" && read -r OFFICE
