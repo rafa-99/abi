@@ -303,7 +303,7 @@ $CHROOT -c "passwd root"
 clear
 
 if [ "$INIT" = "openrc" ]; then
-	$CHROOT "echo hostname=$HOSTNAME > /etc/conf.d/hostname"
+	$CHROOT "echo hostname=\"$HOSTNAME\" > /etc/conf.d/hostname"
 	sed -i s:'keymap="us"':keymap="$KEYMAP":g /mnt/etc/conf.d/keymaps
 
 	if [ "$OS" = "parabola" ]; then
@@ -537,15 +537,22 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 	clear
 
 	# Installation of Xorg and Drivers
-	$CHROOT "pacman --needed --noconfirm -S xorg"
-	clear
+	if [ "$ENVIRONMENT" -ge 1 ] && [ "$ENVIRONMENT" -le 12 ]; then
+		$CHROOT "pacman --needed --noconfirm -S xorg"
+		clear
 
-	echo "Pick your Xorg Driver:"
-	$CHROOT "pacman --needed -S xorg-drivers"
+		echo "Pick your Xorg Driver:"
+		"$CHROOT" "pacman --needed -S xorg-drivers"
+	fi
 	clear
 
 	# Installation of a Display Manager
-	printf "Select your desired Display Manager\n1) Gdm\n2) Lightdm\n3) Sddm\n4) None\n-> " && read -r DISPLAY && clear
+	if [ "$OS" = "parabola" ]; then
+		printf "Select your desired Display Manager\n1) Gdm (Doesnt work)\n2) Lightdm\n3) Sddm\n4) None\n-> " && read -r DISPLAY && clear
+	else
+		printf "Select your desired Display Manager\n1) Gdm\n2) Lightdm\n3) Sddm\n4) None\n-> " && read -r DISPLAY && clear
+	fi
+
 	case "$DISPLAY" in
 		1)
 			$CHROOT "pacman --needed --noconfirm -S gdm"
