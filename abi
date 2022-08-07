@@ -136,7 +136,7 @@ case "$OS" in
 
 	"parabola")
 		printf "Select your init system:\n1) OpenRC\n2) SystemD (default)\n-> " && read -r INIT
-		if [ "$INIT" -eq 2 ]; then
+		if [ "$INIT" -eq 1 ]; then
 			INIT="openrc"
 		else
 			INIT="systemd"
