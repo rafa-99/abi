@@ -501,7 +501,7 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 			$CHROOT "git clone $DWM /tmp/dwm && cd /tmp/dwm && make clean install && cd /"
 			;;
 		4)
-			$CHROOT "pacman --needed --noconfirm -S gnome gnome-extra nautilus gnome-terminal"
+			$CHROOT "pacman --needed --noconfirm -S gnome nautilus gnome-terminal"
 			;;
 		5)
 			$CHROOT "pacman --needed -S i3 dmenu i3blocks"
