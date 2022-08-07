@@ -1,6 +1,6 @@
 #!/bin/sh
 
-OS=$(grep -i ^id /etc/os-release | cut -d= -f2)
+OS=$(grep -i ^id= /etc/os-release | cut -d= -f2)
 
 #############################
 
@@ -257,7 +257,7 @@ if [ "$OS" = "artix" ]; then
 	fstabgen -U /mnt >> /mnt/etc/fstab
 else
 	if [ "$OS" = "parabola" ] && [ "$INIT" != "openrc" ]; then
-		pacstrap /mnt base libelogind udev-init-scripts openrc-desktop elogind "$KERNEL"
+		pacstrap /mnt base libelogind udev-init-scripts elogind "$KERNEL"
 	else
 		pacstrap /mnt base "$KERNEL"
 	fi
