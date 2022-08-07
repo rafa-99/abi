@@ -24,6 +24,11 @@ case "$OS" in
 		;;
 
 	"parabola")
+		# Key errors
+		yes | pacman -U https://www.parabola.nu/packages/core/i686/archlinux32-keyring-transition/download/
+		yes | pacman -Sy archlinux-keyring archlinux32-keyring archlinuxarm-keyring parabola-keyring
+		clear
+
 		# Killing GPG agent that blocks pacman-key --init
 		if pgrep gpg-agent
 		then
