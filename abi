@@ -283,48 +283,48 @@ fi
 
 ## Managing Localtime and Timezone
 rm -rf /mnt/etc/localtime
-"$CHROOT" "ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime"
+$CHROOT "ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime"
 
 ## Managing Users and Passwords
-"$CHROOT" "useradd -m -g users -G wheel $USERNAME"
+$CHROOT "useradd -m -g users -G wheel $USERNAME"
 echo "Enter a password for $USERNAME"
-"$CHROOT" -c "passwd $USERNAME"
+$CHROOT -c "passwd $USERNAME"
 clear
 
 echo "Enter a new password for root account"
-"$CHROOT" -c "passwd root"
+$CHROOT -c "passwd root"
 clear
 
 if [ "$INIT" = "openrc" ]; then
-	"$CHROOT" /mnt /bin/bash -c "echo hostname=$HOSTNAME > /etc/conf.d/hostname"
+	$CHROOT /mnt /bin/bash -c "echo hostname=$HOSTNAME > /etc/conf.d/hostname"
 	sed -i s:'keymap="us"':keymap="$KEYMAP":g /mnt/etc/conf.d/keymaps
 
 	if [ "$OS" = "parabola" ]; then
 		sed -i 's:^#.nonsystemd\]:\[nonsystemd\]\nInclude \= \/etc\/pacman.d\/mirrorlist:g' /mnt/etc/pacman.conf
 	fi
 else
-	 "$CHROOT" "echo $HOSTNAME > /etc/hostname"
-	 "$CHROOT" "echo KEYMAP=$KEYMAP > /etc/vconsole.conf"
+	 $CHROOT "echo $HOSTNAME > /etc/hostname"
+	 $CHROOT "echo KEYMAP=$KEYMAP > /etc/vconsole.conf"
 fi
 
 if [ "$OS" = "parabola" ]; then
 	sed -i 's:^#.nonprism\]:\[nonprism\]\nInclude \= \/etc\/pacman.d\/mirrorlist:g' /mnt/etc/pacman.conf
 fi
 
-"$CHROOT" "echo LANG=$LOCALE.UTF-8 > /etc/locale.conf"
-"$CHROOT" "awk 'FNR>23' /etc/locale.gen | grep $LOCALE | sed s:#::g >> /etc/locale.gen"
-"$CHROOT" "locale-gen"
+$CHROOT "echo LANG=$LOCALE.UTF-8 > /etc/locale.conf"
+$CHROOT "awk 'FNR>23' /etc/locale.gen | grep $LOCALE | sed s:#::g >> /etc/locale.gen"
+$CHROOT "locale-gen"
 clear
 
 ## Adding Encrypted Hook to Init Cpio
 if [ "$ENCRYPTED" != "N" ] && [ "$ENCRYPTED" != "n" ]; then
-	 "$CHROOT" "pacman --noconfirm --needed -Sy cryptsetup"
+	 $CHROOT "pacman --noconfirm --needed -Sy cryptsetup"
 	 HOOKS=$(grep ^HOOKS /mnt/etc/mkinitcpio.conf)
 	 grep ^HOOKS /mnt/etc/mkinitcpio.conf | sed s:'block':'block encrypt':g | xargs -I {} sed -i s:"$HOOKS":{}:g /mnt/etc/mkinitcpio.conf
 fi
 
 ## Generating Initramfs
-"$CHROOT" "mkinitcpio -p $KERNEL"
+$CHROOT "mkinitcpio -p $KERNEL"
 clear
 
 #############################
@@ -339,11 +339,11 @@ sleep 2
 
 # Installation of Base Packages
 echo "Installing Base Packages..."
-"$CHROOT" "pacman --needed --noconfirm -Syu base base-devel"
+$CHROOT "pacman --needed --noconfirm -Syu base base-devel"
 clear
 
 # Enabling Sudo For :wheel Group
-"$CHROOT" "sed -i s/'# %wheel ALL=(ALL:ALL) ALL'/'%wheel ALL=(ALL:ALL) ALL'/g /etc/sudoers"
+$CHROOT "sed -i s/'# %wheel ALL=(ALL:ALL) ALL'/'%wheel ALL=(ALL:ALL) ALL'/g /etc/sudoers"
 
 # Installation of Extra Base
 printf "Do you want to install Extra Base Packages? [Y/n]" && read -r EXTRA
@@ -353,19 +353,19 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 	printf "Select a Text Editor:\n1) emacs\n2) nano\n3) neovim\n4) vi\n5) vim\n-> " && read -r TEXT
 	case "$TEXT" in
 		1)
-			"$CHROOT" "pacman --noconfirm --needed -S emacs"
+			$CHROOT "pacman --noconfirm --needed -S emacs"
 			;;
 		2)
-			"$CHROOT" "pacman --noconfirm --needed -S nano"
+			$CHROOT "pacman --noconfirm --needed -S nano"
 			;;
 		3)
-			"$CHROOT" "pacman --noconfirm --needed -S neovim"
+			$CHROOT "pacman --noconfirm --needed -S neovim"
 			;;
 		4)
-			"$CHROOT" "pacman --noconfirm --needed -S vi"
+			$CHROOT "pacman --noconfirm --needed -S vi"
 			;;
 		5)
-			"$CHROOT" "pacman --noconfirm --needed -S vim"
+			$CHROOT "pacman --noconfirm --needed -S vim"
 	esac
 	clear
 
@@ -376,77 +376,77 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 		printf "Select a Network Manager:\n1) connman\n2) network manager\n-> " && read -r NM
 		case "$NM" in
 			1)
-				"$CHROOT" "pacman --noconfirm --needed -S connman wpa_supplicant"
+				$CHROOT "pacman --noconfirm --needed -S connman wpa_supplicant"
 				case "$INIT" in
 					"dinit")
-						"$CHROOT" "pacman --noconfirm --needed -S connman-dinit && ln -s /etc/dinit.d/connmand /etc/dinit.d/boot.d/"
+						$CHROOT "pacman --noconfirm --needed -S connman-dinit && ln -s /etc/dinit.d/connmand /etc/dinit.d/boot.d/"
 						;;
 
 					"openrc")
-						"$CHROOT" "pacman --noconfirm --needed -S connman-openrc && rc-update add connmand default"
+						$CHROOT "pacman --noconfirm --needed -S connman-openrc && rc-update add connmand default"
 						;;
 
 					"runit")
-						"$CHROOT" "pacman --noconfirm --needed -S connman-runit && ln -s /etc/runit/sv/connmand /etc/runit/runsvdir/default"
+						$CHROOT "pacman --noconfirm --needed -S connman-runit && ln -s /etc/runit/sv/connmand /etc/runit/runsvdir/default"
 						;;
 
 					"s6")
-						"$CHROOT" "pacman --noconfirm --needed -S connman-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default connmand"
+						$CHROOT "pacman --noconfirm --needed -S connman-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default connmand"
 						;;
 
 					*)
-						"$CHROOT" "systemctl enable connmand"
+						$CHROOT "systemctl enable connmand"
 				esac
 				;;
 			2)
-				"$CHROOT" "pacman --noconfirm --needed -S networkmanager"
+				$CHROOT "pacman --noconfirm --needed -S networkmanager"
 				case "$INIT" in
 					"dinit")
-						"$CHROOT" "pacman --noconfirm --needed -S networkmanager-dinit && ln -s /etc/dinit.d/NetworkManager /etc/dinit.d/boot.d/"
+						$CHROOT "pacman --noconfirm --needed -S networkmanager-dinit && ln -s /etc/dinit.d/NetworkManager /etc/dinit.d/boot.d/"
 						;;
 
 					"openrc")
 
 						if [ "$OS" != "parabola" ]; then
-							"$CHROOT" "pacman --noconfirm --needed -S networkmanager-openrc && rc-update add NetworkManager default"
+							$CHROOT "pacman --noconfirm --needed -S networkmanager-openrc && rc-update add NetworkManager default"
 						fi
 
-						"$CHROOT" "rc-update add NetworkManager default"
+						$CHROOT "rc-update add NetworkManager default"
 						;;
 
 					"runit")
 
-						"$CHROOT" "pacman --noconfirm --needed -S networkmanager-runit && ln -s /etc/runit/sv/NetworkManager /etc/runit/runsvdir/default"
+						$CHROOT "pacman --noconfirm --needed -S networkmanager-runit && ln -s /etc/runit/sv/NetworkManager /etc/runit/runsvdir/default"
 						;;
 
 					"s6")
-						"$CHROOT" "pacman --noconfirm --needed -S networkmanager-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default NetworkManager"
+						$CHROOT "pacman --noconfirm --needed -S networkmanager-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default NetworkManager"
 						;;
 
 					*)
-						"$CHROOT" "systemctl enable NetworkManager"
+						$CHROOT "systemctl enable NetworkManager"
 				esac
 		esac
 	else
-		"$CHROOT" "pacman --noconfirm --needed -S dhcpcd"
+		$CHROOT "pacman --noconfirm --needed -S dhcpcd"
 		case "$INIT" in
 			"dinit")
-				"$CHROOT" "pacman --noconfirm --needed -S dhcpcd-dinit && ln -s /etc/dinit.d/dhcpcd /etc/dinit.d/boot.d/"
+				$CHROOT "pacman --noconfirm --needed -S dhcpcd-dinit && ln -s /etc/dinit.d/dhcpcd /etc/dinit.d/boot.d/"
 				;;
 
 			"openrc")
-				"$CHROOT" "pacman --noconfirm --needed -S dhcpcd-openrc && rc-update add dhcpcd default"
+				$CHROOT "pacman --noconfirm --needed -S dhcpcd-openrc && rc-update add dhcpcd default"
 				;;
 
 			"runit")
-				"$CHROOT" "pacman --noconfirm --needed -S dhcpcd-runit && ln -s /etc/runit/sv/dhcpcd /etc/runit/runsvdir/default"
+				$CHROOT "pacman --noconfirm --needed -S dhcpcd-runit && ln -s /etc/runit/sv/dhcpcd /etc/runit/runsvdir/default"
 				;;
 
 			"s6")
-				"$CHROOT" "pacman --noconfirm --needed -S dhcpcd-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default dhcpcd"
+				$CHROOT "pacman --noconfirm --needed -S dhcpcd-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default dhcpcd"
 				;;
 			*)
-				"$CHROOT" "systemctl enable dhcpcd"
+				$CHROOT "systemctl enable dhcpcd"
 		esac
 	fi
 	clear
@@ -454,7 +454,7 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 	# Installation of Base Fonts
 	printf "Do you want to install Base Fonts Packages? [Y/n]" && read -r FONTS
 	if [ "$FONTS" != "N" ] && [ "$FONTS" != "n" ]; then
-		"$CHROOT" "pacman --needed --noconfirm -S ttf-bitstream-vera ttf-dejavu gnu-free-fonts adobe-source-code-pro-fonts noto-fonts-cjk noto-fonts-emoji"
+		$CHROOT "pacman --needed --noconfirm -S ttf-bitstream-vera ttf-dejavu gnu-free-fonts adobe-source-code-pro-fonts noto-fonts-cjk noto-fonts-emoji"
 	fi
 	clear
 
@@ -462,9 +462,9 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 	printf "Do you want to install support for Proprietary Firmware? [Y/n]" && read -r BLOBS
 	if [ "$BLOBS" != "N" ] && [ "$BLOBS" != "n" ]; then
 		if [ "$OS" = parabola ]; then
-			"$CHROOT" "pacman --needed --noconfirm -S linux-libre-firmware"
+			$CHROOT "pacman --needed --noconfirm -S linux-libre-firmware"
 		else
-			"$CHROOT" "pacman --needed --noconfirm -S linux-firmware"
+			$CHROOT "pacman --needed --noconfirm -S linux-firmware"
 		fi
 	fi
 	clear
@@ -473,16 +473,16 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 	printf "Select an Audio Package:\n1) alsa\n2) jack\n3) pipewire\n4) pulseaudio\n-> " && read -r AUDIO
 	case "$AUDIO" in
 		1)
-			"$CHROOT" "pacman --noconfirm --needed -S alsa-lib alsa-oss alsa-utils alsa-plugins"
+			$CHROOT "pacman --noconfirm --needed -S alsa-lib alsa-oss alsa-utils alsa-plugins"
 			;;
 		2)
-			"$CHROOT" "pacman --noconfirm --needed -S jack"
+			$CHROOT "pacman --noconfirm --needed -S jack"
 			;;
 		3)
-			"$CHROOT" "pacman --noconfirm --needed -S pipewire"
+			$CHROOT "pacman --noconfirm --needed -S pipewire"
 			;;
 		4)
-			"$CHROOT" "pacman --noconfirm --needed -S pulseaudio pavucontrol pulseaudio-alsa alsa-utils"
+			$CHROOT "pacman --noconfirm --needed -S pulseaudio pavucontrol pulseaudio-alsa alsa-utils"
 	esac
 	clear
 
@@ -491,48 +491,48 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 
 	case "$ENVIRONMENT" in
 		1)
-			"$CHROOT" "pacman --needed --noconfirm -S bspwm sxhkd"
+			$CHROOT "pacman --needed --noconfirm -S bspwm sxhkd"
 			;;
 		2)
-			"$CHROOT" "pacman --needed --noconfirm -S cinnamon nemo-fileroller gnome-terminal"
+			$CHROOT "pacman --needed --noconfirm -S cinnamon nemo-fileroller gnome-terminal"
 			;;
 		3)
 			printf "Enter your dwm build location (e.g. https://git.suckless.org/dwm)\n-> " && read -r DWM
-			"$CHROOT" "git clone $DWM /tmp/dwm && cd /tmp/dwm && make clean install && cd /"
+			$CHROOT "git clone $DWM /tmp/dwm && cd /tmp/dwm && make clean install && cd /"
 			;;
 		4)
-			"$CHROOT" "pacman --needed --noconfirm -S gnome gnome-extra nautilus gnome-terminal"
+			$CHROOT "pacman --needed --noconfirm -S gnome gnome-extra nautilus gnome-terminal"
 			;;
 		5)
-			"$CHROOT" "pacman --needed -S i3 dmenu i3blocks"
+			$CHROOT "pacman --needed -S i3 dmenu i3blocks"
 			;;
 		6)
-			"$CHROOT" "pacman --needed --noconfirm -S plasma kdebase"
+			$CHROOT "pacman --needed --noconfirm -S plasma kdebase"
 			;;
 		7)
-			"$CHROOT" "pacman --needed --noconfirm -S lxde"
+			$CHROOT "pacman --needed --noconfirm -S lxde"
 			;;
 		8)
-			"$CHROOT" "pacman --needed --noconfirm -S lxqt"
+			$CHROOT "pacman --needed --noconfirm -S lxqt"
 			;;
 		9)
-			"$CHROOT" "pacman --needed --noconfirm -S mate mate-extra"
+			$CHROOT "pacman --needed --noconfirm -S mate mate-extra"
 			;;
 		10)
-			"$CHROOT" "pacman --needed --noconfirm -S openbox obconf-qt menumaker"
+			$CHROOT "pacman --needed --noconfirm -S openbox obconf-qt menumaker"
 			;;
 		11)
-			"$CHROOT" "pacman --needed --noconfirm -S xfce4 xfce4-goodies"
+			$CHROOT "pacman --needed --noconfirm -S xfce4 xfce4-goodies"
 			;;
 		12)
-			"$CHROOT" "pacman --needed --noconfirm -S xorg xorg-apps xorg-server xorg-xinit"
+			$CHROOT "pacman --needed --noconfirm -S xorg xorg-apps xorg-server xorg-xinit"
 	esac
 	clear
 
 	# Installation of Xorg Drivers
 	if [ "$ENVIRONMENT" -ge 1 ] && [ "$ENVIRONMENT" -le 12 ]; then
 		echo "Pick your Xorg Driver:"
-		"$CHROOT" "pacman --needed -S xorg-drivers"
+		$CHROOT "pacman --needed -S xorg-drivers"
 	fi
 	clear
 
@@ -540,63 +540,63 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 	printf "Select your desired Display Manager\n1) Gdm\n2) Lightdm\n3) Sddm\n4) None\n-> " && read -r DISPLAY && clear
 	case "$DISPLAY" in
 		1)
-			"$CHROOT" "pacman --needed --noconfirm -S gdm"
+			$CHROOT "pacman --needed --noconfirm -S gdm"
 			clear
 			case "$INIT" in
 				"dinit")
-					"$CHROOT" "pacman --needed --noconfirm -S gdm-dinit && ln -s /etc/dinit.d/gdm /etc/dinit.d/boot.d/"
+					$CHROOT "pacman --needed --noconfirm -S gdm-dinit && ln -s /etc/dinit.d/gdm /etc/dinit.d/boot.d/"
 					;;
 				"openrc")
-					"$CHROOT" "pacman --needed --noconfirm -S gdm-openrc && rc-update add gdm default"
+					$CHROOT "pacman --needed --noconfirm -S gdm-openrc && rc-update add gdm default"
 					;;
 				"runit")
-					"$CHROOT" "pacman --needed --noconfirm -S gdm-runit && ln -s /etc/runit/sv/gdm /etc/runit/runsvdir/default"
+					$CHROOT "pacman --needed --noconfirm -S gdm-runit && ln -s /etc/runit/sv/gdm /etc/runit/runsvdir/default"
 					;;
 				"s6")
-					"$CHROOT" "pacman --needed --noconfirm -S gdm-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default gdm"
+					$CHROOT "pacman --needed --noconfirm -S gdm-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default gdm"
 					;;
 				*)
-					"$CHROOT" "systemctl enable gdm"
+					$CHROOT "systemctl enable gdm"
 			esac
 			;;
 		2)
-			"$CHROOT" "pacman --needed --noconfirm -S lightdm lightdm-gtk-greeter"
+			$CHROOT "pacman --needed --noconfirm -S lightdm lightdm-gtk-greeter"
 			clear
 			case "$INIT" in
 				"dinit")
-					"$CHROOT" "pacman --needed --noconfirm -S lightdm-dinit && ln -s /etc/dinit.d/lightdm /etc/dinit.d/boot.d/"
+					$CHROOT "pacman --needed --noconfirm -S lightdm-dinit && ln -s /etc/dinit.d/lightdm /etc/dinit.d/boot.d/"
 					;;
 				"openrc")
-					"$CHROOT" "pacman --needed --noconfirm -S lightdm-openrc && rc-update add lightdm default"
+					$CHROOT "pacman --needed --noconfirm -S lightdm-openrc && rc-update add lightdm default"
 					;;
 				"runit")
-					"$CHROOT" "pacman --needed --noconfirm -S lightdm-runit && ln -s /etc/runit/sv/lightdm /etc/runit/runsvdir/default"
+					$CHROOT "pacman --needed --noconfirm -S lightdm-runit && ln -s /etc/runit/sv/lightdm /etc/runit/runsvdir/default"
 					;;
 				"s6")
-					"$CHROOT" "pacman --needed --noconfirm -S lightdm-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default lightdm"
+					$CHROOT "pacman --needed --noconfirm -S lightdm-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default lightdm"
 					;;
 				*)
-					"$CHROOT" "systemctl enable lightdm"
+					$CHROOT "systemctl enable lightdm"
 			esac
 			;;
 		3)
-			"$CHROOT" "pacman --needed --noconfirm -S sddm"
+			$CHROOT "pacman --needed --noconfirm -S sddm"
 			clear
 			case "$INIT" in
 				"dinit")
-					"$CHROOT" "pacman --needed --noconfirm -S sddm-dinit && ln -s /etc/dinit.d/sddm /etc/dinit.d/boot.d/"
+					$CHROOT "pacman --needed --noconfirm -S sddm-dinit && ln -s /etc/dinit.d/sddm /etc/dinit.d/boot.d/"
 					;;
 				"openrc")
-					"$CHROOT" "pacman --needed --noconfirm -S sddm-openrc && rc-update add sddm default"
+					$CHROOT "pacman --needed --noconfirm -S sddm-openrc && rc-update add sddm default"
 					;;
 				"runit")
-					"$CHROOT" "pacman --needed --noconfirm -S sddm-runit && ln -s /etc/runit/sv/sddm /etc/runit/runsvdir/default"
+					$CHROOT "pacman --needed --noconfirm -S sddm-runit && ln -s /etc/runit/sv/sddm /etc/runit/runsvdir/default"
 					;;
 				"s6")
-					"$CHROOT" "pacman --needed --noconfirm -S sddm-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default sddm"
+					$CHROOT "pacman --needed --noconfirm -S sddm-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default sddm"
 					;;
 				*)
-					"$CHROOT" "systemctl enable sddm"
+					$CHROOT "systemctl enable sddm"
 			esac
 	esac
 	clear
@@ -605,7 +605,7 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 	if [ "$GRUB" != "N" ] && [ "$GRUB" != "n" ]; then
 
 		# Installing GRUB
-		"$CHROOT" "pacman --needed --noconfirm -Syu grub"
+		$CHROOT "pacman --needed --noconfirm -Syu grub"
 		clear
 
 		# Installation of GRUB Bootloader
@@ -614,23 +614,23 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 
 		## Adding Encrypted Config to GRUB
 		if [ "$ENCRYPTED" != "N" ] && [ "$ENCRYPTED" != "n" ]; then
-			"$CHROOT" "pacman --needed --noconfirm -Syu cryptsetup"
+			$CHROOT "pacman --needed --noconfirm -Syu cryptsetup"
 			sed -i s:'GRUB_CMDLINE_LINUX=""':"GRUB_CMDLINE_LINUX=\"cryptdevice=/dev/$ENCRYPTEDPARTITION\:cryptdevice\"":g /mnt/etc/default/grub
 		fi
 
 		case "$GRUB" in
 			1)
-				"$CHROOT" "grub-install --target=i386-pc /dev/$SDX"
-				"$CHROOT" "grub-mkconfig -o /boot/grub/grub.cfg"
+				$CHROOT "grub-install --target=i386-pc /dev/$SDX"
+				$CHROOT "grub-mkconfig -o /boot/grub/grub.cfg"
 				;;
 			2)
-				"$CHROOT" "pacman --noconfirm --needed -S efibootmgr"
-				"$CHROOT" "grub-install --target=x86_46-efi /dev/$SDX"
-				"$CHROOT" "grub-mkconfig -o /boot/grub/grub.cfg"
+				$CHROOT "pacman --noconfirm --needed -S efibootmgr"
+				$CHROOT "grub-install --target=x86_46-efi /dev/$SDX"
+				$CHROOT "grub-mkconfig -o /boot/grub/grub.cfg"
 				;;
 			*)
-				"$CHROOT" "grub-install /dev/$SDX"
-				"$CHROOT" "grub-mkconfig -o /boot/grub/grub.cfg"
+				$CHROOT "grub-install /dev/$SDX"
+				$CHROOT "grub-mkconfig -o /boot/grub/grub.cfg"
 		esac
 		clear
 	fi
@@ -650,22 +650,22 @@ sleep 2
 # Printer and Scanners
 printf "Do you want to install Printers & Scanners support? [Y/n]" && read -r CUPS
 if [ "$CUPS" != "N" ] && [ "$CUPS" != "n" ]; then
-	"$CHROOT" "pacman --needed --noconfirm -S cups cups-pdf hplip system-config-printer simple-scan"
+	$CHROOT "pacman --needed --noconfirm -S cups cups-pdf hplip system-config-printer simple-scan"
 	case "$INIT" in
 		1)
-			"$CHROOT" "pacman --needed --noconfirm -S cups-dinit avahi-dinit && ln -s /etc/dinit.d/cupsd /etc/dinit.d/boot.d/"
+			$CHROOT "pacman --needed --noconfirm -S cups-dinit avahi-dinit && ln -s /etc/dinit.d/cupsd /etc/dinit.d/boot.d/"
 			;;
 		2)
-			"$CHROOT" "pacman --needed --noconfirm -S cups-openrc avahi-openrc && rc-update add cupsd default && rc-update add avahi default"
+			$CHROOT "pacman --needed --noconfirm -S cups-openrc avahi-openrc && rc-update add cupsd default && rc-update add avahi default"
 			;;
 		3)
-			"$CHROOT" "pacman --needed --noconfirm -S cups-runit avahi-runit && ln -s /etc/runit/sv/cupsd /etc/runit/runsvdir/default && ln -s /etc/runit/sv/runit /etc/runit/runsvdir/default"
+			$CHROOT "pacman --needed --noconfirm -S cups-runit avahi-runit && ln -s /etc/runit/sv/cupsd /etc/runit/runsvdir/default && ln -s /etc/runit/sv/runit /etc/runit/runsvdir/default"
 			;;
 		4)
-			"$CHROOT" "pacman --needed --noconfirm -S cups-s6 avahi-s6 && s6-rc-bundle add default cupsd && s6-rc-bundle-update -c /etc/s6/rc/compiled add default avahi"
+			$CHROOT "pacman --needed --noconfirm -S cups-s6 avahi-s6 && s6-rc-bundle add default cupsd && s6-rc-bundle-update -c /etc/s6/rc/compiled add default avahi"
 			;;
 		*)
-			"$CHROOT" "systemctl enable cupsd && systemctl enable avahi"
+			$CHROOT "systemctl enable cupsd && systemctl enable avahi"
 	esac
 fi
 clear
@@ -683,9 +683,9 @@ if [ "$OS" = "artix" ]; then
 
 		# Adding Arch Linux Support
 		printf "\n[universe]\nInclude = /etc/pacman.d/mirrorlist" >> /mnt/etc/pacman.conf
-		"$CHROOT" "pacman --needed --noconfirm -Syu artix-archlinux-support"
+		$CHROOT "pacman --needed --noconfirm -Syu artix-archlinux-support"
 		printf "\n#[testing]\n#Include = /etc/pacman.d/mirrorlist-arch\n\n[extra]\nInclude = /etc/pacman.d/mirrorlist-arch\n\n[community]\nInclude = /etc/pacman.d/mirrorlist-arch\n\n#[community-testing]\n#Include = /etc/pacman.d/mirrorlist-arch" >> /mnt/etc/pacman.conf
-		"$CHROOT" "pacman-key --populate archlinux"
+		$CHROOT "pacman-key --populate archlinux"
 		mv /mnt/etc/pacman.d/mirrorlist-arch /mnt/etc/pacman.d/mirrorlist-arch.backup
 		clear
 
@@ -722,7 +722,7 @@ if [ "$OS" != "parabola" ]; then
 		printf "Do you want to multilib repo? [Y/n]" && read -r MULTI
 		if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
 			printf "[multilib]\nSigLevel = PackageRequired\nInclude = /etc/pacman.d/mirrorlist" >> /mnt/etc/pacman.conf
-			"$CHROOT" "pacman --needed --noconfirm -Syu"
+			$CHROOT "pacman --needed --noconfirm -Syu"
 		fi
 	else
 		if [ "$OS" = "artix" ]; then
@@ -730,7 +730,7 @@ if [ "$OS" != "parabola" ]; then
 				printf "Do you want to multilib repo? [Y/n]" && read -r MULTI
 				if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
 					printf "\n[multilib]\nInclude = /etc/pacman.d/mirrorlist-arch" >> /mnt/etc/pacman.conf
-					"$CHROOT" "pacman --needed --noconfirm -Syu"
+					$CHROOT "pacman --needed --noconfirm -Syu"
 				fi
 			fi
 		fi
@@ -740,19 +740,19 @@ if [ "$OS" != "parabola" ]; then
 	if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
 		printf "Do you want to install Gaming software and related dependencies? (steam, lutris, 32 bit libraries) [Y/n]" && read -r GAME
 		if [ "$GAME" != "N" ] && [ "$GAME" != "n" ]; then
-			"$CHROOT" "pacman --needed --noconfirm -S wine-staging wine-mono wine-gecko winetricks giflib lib32-giflib libpng lib32-libpng libldap lib32-libldap gnutls lib32-gnutls mpg123 lib32-mpg123 openal lib32-openal v4l-utils lib32-v4l-utils libpulse lib32-libpulse libgpg-error lib32-libgpg-error alsa-plugins lib32-alsa-plugins alsa-lib lib32-alsa-lib libjpeg-turbo lib32-libjpeg-turbo sqlite lib32-sqlite libxcomposite lib32-libxcomposite libxinerama lib32-libgcrypt libgcrypt lib32-libxinerama ncurses lib32-ncurses opencl-icd-loader lib32-opencl-icd-loader libxslt lib32-libxslt libva lib32-libva gtk3 lib32-gtk3 gst-plugins-base-libs lib32-gst-plugins-base-libs vulkan-icd-loader lib32-vulkan-icd-loader lutris steam"
+			$CHROOT "pacman --needed --noconfirm -S wine-staging wine-mono wine-gecko winetricks giflib lib32-giflib libpng lib32-libpng libldap lib32-libldap gnutls lib32-gnutls mpg123 lib32-mpg123 openal lib32-openal v4l-utils lib32-v4l-utils libpulse lib32-libpulse libgpg-error lib32-libgpg-error alsa-plugins lib32-alsa-plugins alsa-lib lib32-alsa-lib libjpeg-turbo lib32-libjpeg-turbo sqlite lib32-sqlite libxcomposite lib32-libxcomposite libxinerama lib32-libgcrypt libgcrypt lib32-libxinerama ncurses lib32-ncurses opencl-icd-loader lib32-opencl-icd-loader libxslt lib32-libxslt libva lib32-libva gtk3 lib32-gtk3 gst-plugins-base-libs lib32-gst-plugins-base-libs vulkan-icd-loader lib32-vulkan-icd-loader lutris steam"
 			clear
 
 			printf "Select a graphics card brand:\n1)AMD\n2)Intel\n3)NVIDIA\n-> " && read -r GPU
 			case "$GPU" in
 				1)
-					"$CHROOT" "pacman --noconfirm --needed -S lib32-mesa vulkan-radeon lib32-vulkan-radeon vulkan-icd-loader lib32-vulkan-icd-loader"
+					$CHROOT "pacman --noconfirm --needed -S lib32-mesa vulkan-radeon lib32-vulkan-radeon vulkan-icd-loader lib32-vulkan-icd-loader"
 					;;
 				2)
-					"$CHROOT" "pacman --noconfirm -S lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-icd-loader lib32-vulkan-icd-loader"
+					$CHROOT "pacman --noconfirm -S lib32-mesa vulkan-intel lib32-vulkan-intel vulkan-icd-loader lib32-vulkan-icd-loader"
 					;;
 				3)
-					"$CHROOT" "pacman --noconfirm -S nvidia nvidia-utils lib32-nvidia-utils nvidia-settings vulkan-icd-loader lib32-vulkan-icd-loader"
+					$CHROOT "pacman --noconfirm -S nvidia nvidia-utils lib32-nvidia-utils nvidia-settings vulkan-icd-loader lib32-vulkan-icd-loader"
 			esac
 		fi
 	fi
@@ -761,7 +761,7 @@ fi
 # Office Suite
 printf "Do you want to install LibreOffice Suite? [Y/n]" && read -r OFFICE
 if [ "$OFFICE" != "N" ] && [ "$OFFICE" != "n" ]; then
-	"$CHROOT" "pacman --needed -S libreoffice"
+	$CHROOT "pacman --needed -S libreoffice"
 fi
 clear
 
@@ -769,12 +769,12 @@ clear
 printf "Do you want to install Internet related stuff? (firefox and transmission) [Y/n]" && read -r INTERNET
 if [ "$INTERNET" != "N" ] && [ "$INTERNET" != "n" ]; then
 
-	"$CHROOT" "pacman --needed --noconfirm -S firefox"
+	$CHROOT "pacman --needed --noconfirm -S firefox"
 
 	if [ "$ENVIRONMENT" -eq 6 ] || [ "$ENVIRONMENT" -eq 8 ]; then
-		"$CHROOT" "pacman --needed --noconfirm -S transmission-qt"
+		$CHROOT "pacman --needed --noconfirm -S transmission-qt"
 	else
-		"$CHROOT" "pacman --needed --noconfirm -S transmission-gtk"
+		$CHROOT "pacman --needed --noconfirm -S transmission-gtk"
 	fi
 fi
 clear
@@ -782,15 +782,15 @@ clear
 # Multimedia Related Stuff
 printf "Do you want to install Multimedia manipulation tools? (gimp, inkscape, kdenlive, vlc) [Y/n]" && read -r MEDIA
 if [ "$MEDIA" != "N" ] && [ "$MEDIA" != "n" ]; then
-	"$CHROOT" "pacman --needed --noconfirm -S gimp kdenlive frei0r-plugins breeze-icons vlc inkscape"
+	$CHROOT "pacman --needed --noconfirm -S gimp kdenlive frei0r-plugins breeze-icons vlc inkscape"
 fi
 clear
 
 # AUR
 printf "Do you want to Enable AUR support? [Y/n] (yay)" && read -r AUR
 if [ "$AUR" != "N" ] && [ "$AUR" != "n" ]; then
-	"$CHROOT" "pacman --noconfirm --needed -Sy curl"
-	"$CHROOT" "sudo -u $USERNAME mkdir /home/$USERNAME/AUR && cd /home/$USERNAME/AUR && sudo -u $USERNAME curl -LO 'https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=yay' && sudo -u $USERNAME mv PKGBUILD\?h\=yay PKGBUILD && sudo -u $USERNAME makepkg --noconfirm -si && cd / && rm -rf /home/$USERNAME/AUR /home/$USERNAME/go"
+	$CHROOT "pacman --noconfirm --needed -Sy curl"
+	$CHROOT "sudo -u $USERNAME mkdir /home/$USERNAME/AUR && cd /home/$USERNAME/AUR && sudo -u $USERNAME curl -LO 'https://aur.archlinux.org/cgit/aur.git/plain/PKGBUILD?h=yay' && sudo -u $USERNAME mv PKGBUILD\?h\=yay PKGBUILD && sudo -u $USERNAME makepkg --noconfirm -si && cd / && rm -rf /home/$USERNAME/AUR /home/$USERNAME/go"
 fi
 clear
 
@@ -798,7 +798,7 @@ clear
 printf "Do you want to install any extra packages not mentioned above? [Y/n]" && read -r MISSING
 if [ "$MISSING" != "N" ] && [ "$MISSING" != "n" ]; then
 	printf "Type below the extra packages you want to install separated by spaces:\n-> " && read -r PACKAGES
-	"$CHROOT" "pacman --needed -S $PACKAGES"
+	$CHROOT "pacman --needed -S $PACKAGES"
 fi
 clear
 
@@ -813,14 +813,14 @@ sleep 2
 
 printf "Do you want to Disable internal system beep? [Y/n]" && read -r BEEP
 if [ "$BEEP" != "N" ] && [ "$BEEP" != "n" ]; then
-	"$CHROOT" "echo "blacklist pcspkr" > /mnt/etc/modprobe.d/nobeep.conf"
+	$CHROOT "echo "blacklist pcspkr" > /mnt/etc/modprobe.d/nobeep.conf"
 fi
 clear
 
-"$CHROOT" "pacman --noconfirm -Syyuu"
+$CHROOT "pacman --noconfirm -Syyuu"
 clear
 
-"$CHROOT" "pacman --noconfirm -Scc"
+$CHROOT "pacman --noconfirm -Scc"
 clear
 
 #############################
