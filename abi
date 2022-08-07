@@ -263,7 +263,7 @@ if [ "$OS" = "artix" ]; then
 	esac
 	fstabgen -U /mnt >> /mnt/etc/fstab
 else
-	if [ "$OS" = "parabola" ] && [ "$INIT" != "openrc" ]; then
+	if [ "$OS" = "parabola" ] && [ "$INIT" = "openrc" ]; then
 		pacstrap /mnt base libelogind udev-init-scripts elogind "$KERNEL"
 	else
 		pacstrap /mnt base "$KERNEL"
