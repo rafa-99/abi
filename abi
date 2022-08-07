@@ -507,7 +507,7 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 			$CHROOT "pacman --needed -S i3 dmenu i3blocks"
 			;;
 		6)
-			$CHROOT "pacman --needed --noconfirm -S plasma kdebase"
+			$CHROOT "pacman --needed --noconfirm -S plasma-desktop"
 			;;
 		7)
 			$CHROOT "pacman --needed --noconfirm -S lxde"
