@@ -296,7 +296,7 @@ $CHROOT -c "passwd root"
 clear
 
 if [ "$INIT" = "openrc" ]; then
-	$CHROOT /mnt /bin/bash -c "echo hostname=$HOSTNAME > /etc/conf.d/hostname"
+	$CHROOT "echo hostname=$HOSTNAME > /etc/conf.d/hostname"
 	sed -i s:'keymap="us"':keymap="$KEYMAP":g /mnt/etc/conf.d/keymaps
 
 	if [ "$OS" = "parabola" ]; then
@@ -529,11 +529,12 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 	esac
 	clear
 
-	# Installation of Xorg Drivers
-	if [ "$ENVIRONMENT" -ge 1 ] && [ "$ENVIRONMENT" -le 12 ]; then
-		echo "Pick your Xorg Driver:"
-		$CHROOT "pacman --needed -S xorg-drivers"
-	fi
+	# Installation of Xorg and Drivers
+	$CHROOT "pacman --needed --noconfirm -S xorg"
+	clear
+
+	echo "Pick your Xorg Driver:"
+	$CHROOT "pacman --needed -S xorg-drivers"
 	clear
 
 	# Installation of a Display Manager
@@ -713,6 +714,7 @@ if [ "$OS" != "parabola" ]; then
 			fi
 		fi
 	fi
+	clear
 
 	# Gaming Related Stuff
 	if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
@@ -734,6 +736,7 @@ if [ "$OS" != "parabola" ]; then
 			esac
 		fi
 	fi
+	clear
 fi
 
 # Office Suite
