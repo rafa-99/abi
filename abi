@@ -700,28 +700,6 @@ if [ "$OS" != "parabola" ]; then
 		printf "Do you want to multilib repo? [Y/n]" && read -r MULTI
 		if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
 			printf "[multilib]\nSigLevel = PackageRequired\nInclude = /etc/pacman.d/mirrorlist" >> /mnt/etc/pacman.conf
-			arch-chroot /mnt /bin/bash -c "pacman --needed --noconfirm -Syu"
-		fi
-	else
-		if [ "$OS" = "artix" ]; then
-			if [ "$ARCH" != "N" ] && [ "$ARCH" != "n" ]; then
-				printf "Do you want to multilib repo? [Y/n]" && read -r MULTI
-				if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
-					printf "\n[multilib]\nInclude = /etc/pacman.d/mirrorlist-arch" >> /mnt/etc/pacman.conf
-					artix-chroot /mnt /bin/bash -c "pacman --needed --noconfirm -Syu"
-				fi
-			fi
-		fi
-	fi
-fi
-
-
-
-if [ "$OS" != "parabola" ]; then
-	if [ "$OS" = "arch" ]; then
-		printf "Do you want to multilib repo? [Y/n]" && read -r MULTI
-		if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
-			printf "[multilib]\nSigLevel = PackageRequired\nInclude = /etc/pacman.d/mirrorlist" >> /mnt/etc/pacman.conf
 			$CHROOT "pacman --needed --noconfirm -Syu"
 		fi
 	else
