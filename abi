@@ -77,16 +77,13 @@ clear
 ## Reading Init System
 case "$OS" in
 	"artix")
-		printf "Select your init system:\n1) dinit\n2) OpenRC (default)\n3) Runit\n4) S6\n-> " && read -r INIT
+		printf "Select your init system:\n1) dinit\n2) OpenRC (default)\n3) Runit\n-> " && read -r INIT
 		case "$INIT" in
 			1)
 				INIT="dinit"
 				;;
 			3)
 				INIT="runit"
-				;;
-			4)
-				INIT="s6"
 				;;
 			*)
 				INIT="openrc"
@@ -205,9 +202,6 @@ if [ "$OS" = "artix" ]; then
 			;;
 		"runit")
 			basestrap /mnt base runit elogind-runit "$KERNEL"
-			;;
-		"s6")
-			basestrap /mnt base s6 elogind-s6 "$KERNEL"
 			;;
 		*)
 			basestrap /mnt base openrc elogind-openrc "$KERNEL"
@@ -337,11 +331,6 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 					"runit")
 						$CHROOT "pacman --noconfirm --needed -S connman-runit && ln -s /etc/runit/sv/connmand /etc/runit/runsvdir/default"
 						;;
-
-					"s6")
-						$CHROOT "pacman --noconfirm --needed -S connman-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default connmand"
-						;;
-
 					*)
 						$CHROOT "systemctl enable connmand"
 				esac
@@ -362,11 +351,6 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 
 						$CHROOT "pacman --noconfirm --needed -S networkmanager-runit && ln -s /etc/runit/sv/NetworkManager /etc/runit/runsvdir/default"
 						;;
-
-					"s6")
-						$CHROOT "pacman --noconfirm --needed -S networkmanager-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default NetworkManager"
-						;;
-
 					*)
 						$CHROOT "systemctl enable NetworkManager"
 				esac
@@ -384,10 +368,6 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 
 			"runit")
 				$CHROOT "pacman --noconfirm --needed -S dhcpcd-runit && ln -s /etc/runit/sv/dhcpcd /etc/runit/runsvdir/default"
-				;;
-
-			"s6")
-				$CHROOT "pacman --noconfirm --needed -S dhcpcd-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default dhcpcd"
 				;;
 			*)
 				$CHROOT "systemctl enable dhcpcd"
@@ -495,9 +475,6 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 				"runit")
 					$CHROOT "pacman --needed --noconfirm -S gdm-runit && ln -s /etc/runit/sv/gdm /etc/runit/runsvdir/default"
 					;;
-				"s6")
-					$CHROOT "pacman --needed --noconfirm -S gdm-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default gdm"
-					;;
 				*)
 					$CHROOT "systemctl enable gdm"
 			esac
@@ -515,9 +492,6 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 				"runit")
 					$CHROOT "pacman --needed --noconfirm -S lightdm-runit && ln -s /etc/runit/sv/lightdm /etc/runit/runsvdir/default"
 					;;
-				"s6")
-					$CHROOT "pacman --needed --noconfirm -S lightdm-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default lightdm"
-					;;
 				*)
 					$CHROOT "systemctl enable lightdm"
 			esac
@@ -534,9 +508,6 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 					;;
 				"runit")
 					$CHROOT "pacman --needed --noconfirm -S sddm-runit && ln -s /etc/runit/sv/sddm /etc/runit/runsvdir/default"
-					;;
-				"s6")
-					$CHROOT "pacman --needed --noconfirm -S sddm-s6 && s6-rc-bundle-update -c /etc/s6/rc/compiled add default sddm"
 					;;
 				*)
 					$CHROOT "systemctl enable sddm"
@@ -603,9 +574,6 @@ if [ "$CUPS" != "N" ] && [ "$CUPS" != "n" ]; then
 			;;
 		3)
 			$CHROOT "pacman --needed --noconfirm -S cups-runit avahi-runit && ln -s /etc/runit/sv/cupsd /etc/runit/runsvdir/default && ln -s /etc/runit/sv/runit /etc/runit/runsvdir/default"
-			;;
-		4)
-			$CHROOT "pacman --needed --noconfirm -S cups-s6 avahi-s6 && s6-rc-bundle add default cupsd && s6-rc-bundle-update -c /etc/s6/rc/compiled add default avahi"
 			;;
 		*)
 			$CHROOT "systemctl enable cupsd && systemctl enable avahi"
