@@ -564,13 +564,6 @@ if [ "$OS" = "artix" ]; then
 		$CHROOTC "pacman --needed --noconfirm -Syu artix-archlinux-support"
 		printf "\n#[testing]\n#Include = /etc/pacman.d/mirrorlist-arch\n\n[extra]\nInclude = /etc/pacman.d/mirrorlist-arch\n\n[community]\nInclude = /etc/pacman.d/mirrorlist-arch\n\n#[community-testing]\n#Include = /etc/pacman.d/mirrorlist-arch" >> /mnt/etc/pacman.conf
 		$CHROOTC "pacman-key --populate archlinux"
-		mv /mnt/etc/pacman.d/mirrorlist-arch /mnt/etc/pacman.d/mirrorlist-arch.backup
-		mv /mnt/etc/pacman.d/mirrorlist-universe /mnt/etc/pacman.d/mirrorlist-universe.backup
-		clear
-
-		echo "Updating Arch Linux Repos..."
-		grep -vi ^# /mnt/etc/pacman.d/mirrorlist-arch.backup | rankmirrors - > /mnt/etc/pacman.d/mirrorlist-arch
-		grep -vi ^# /mnt/etc/pacman.d/mirrorlist-universe.backup | rankmirrors - > /mnt/etc/pacman.d/mirrorlist-universe
 		clear
 	fi
 fi
