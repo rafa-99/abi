@@ -579,6 +579,8 @@ else
 		if [ "$ARCH" != "N" ] && [ "$ARCH" != "n" ]; then
 			printf "Do you want to multilib repo? [Y/n]" && read -r MULTI
 			if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
+				printf "\n[lib32]\nInclude = /etc/pacman.d/mirrorlist" >> /mnt/etc/pacman.conf
+				$CHROOTC "pacman --needed --noconfirm -Syu lib32-artix-archlinux-support"
 				printf "\n[multilib]\nInclude = /etc/pacman.d/mirrorlist-arch" >> /mnt/etc/pacman.conf
 				$CHROOTC "pacman --needed --noconfirm -Syu"
 			fi
