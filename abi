@@ -569,7 +569,7 @@ if [ "$OS" = "artix" ]; then
 fi
 
 if [ "$OS" = "arch" ]; then
-	printf "Do you want to multilib repo? [Y/n]" && read -r MULTI
+	printf "Do you want to enable multilib repo? [Y/n]" && read -r MULTI
 	if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
 		printf "[multilib]\nSigLevel = PackageRequired\nInclude = /etc/pacman.d/mirrorlist" >> /mnt/etc/pacman.conf
 		$CHROOTC "pacman --needed --noconfirm -Syu"
@@ -577,11 +577,22 @@ if [ "$OS" = "arch" ]; then
 else
 	if [ "$OS" = "artix" ]; then
 		if [ "$ARCH" != "N" ] && [ "$ARCH" != "n" ]; then
-			printf "Do you want to multilib repo? [Y/n]" && read -r MULTI
+			printf "Do you want to enable multilib repo? [Y/n]" && read -r MULTI
 			if [ "$MULTI" != "N" ] && [ "$MULTI" != "n" ]; then
 				printf "\n[lib32]\nInclude = /etc/pacman.d/mirrorlist" >> /mnt/etc/pacman.conf
 				$CHROOTC "pacman --needed --noconfirm -Syu lib32-artix-archlinux-support"
 				printf "\n[multilib]\nInclude = /etc/pacman.d/mirrorlist-arch" >> /mnt/etc/pacman.conf
+				$CHROOTC "pacman --needed --noconfirm -Syu"
+			fi
+			clear
+
+			printf "Do you want to enable debug repos? [Y/n]" && read -r DEBUG
+			if [ "$DEBUG" != "N" ] && [ "$DEBUG" != "n" ]; then
+				printf "\n[system-debug]\nInclude = /etc/pacman.d/mirrorlist-debug" >> /mnt/etc/pacman.conf
+				printf "\n[world-debug]\nInclude = /etc/pacman.d/mirrorlist-debug" >> /mnt/etc/pacman.conf
+				printf "\n[galaxy-debug]\nInclude = /etc/pacman.d/mirrorlist-debug" >> /mnt/etc/pacman.conf
+				printf "\n[lib32-debug]\nInclude = /etc/pacman.d/mirrorlist-debug" >> /mnt/etc/pacman.conf
+				printf "Server = https://debuginfod.artixlinux.org/\$repo/os/\$arch" >>  >> /mnt/etc/pacman.d/mirrorlist-debug
 				$CHROOTC "pacman --needed --noconfirm -Syu"
 			fi
 		fi
