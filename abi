@@ -504,9 +504,12 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 				$CHROOTC "grub-mkconfig -o /boot/grub/grub.cfg"
 				;;
 			2)
-				$CHROOTC "pacman --noconfirm --needed -S efibootmgr"
-				$CHROOTC "grub-install --target=x86_46-efi /dev/$SDX"
-				$CHROOTC "grub-mkconfig -o /boot/grub/grub.cfg"
+				printf "Insert your EFI partition path\n-> " && read -r EFI && clear
+					if [ "$EFI" != "N" ] && [ "$EFI" != "n" ]; then
+						$CHROOTC "pacman --noconfirm --needed -S efibootmgr"
+						$CHROOTC "grub-install --target=x86_46-efi --efi-directory=$EFI /dev/$SDX"
+						$CHROOTC "grub-mkconfig -o /boot/grub/grub.cfg"
+					fi
 				;;
 			*)
 				$CHROOTC "grub-install /dev/$SDX"
@@ -592,7 +595,7 @@ else
 				printf "\n[world-debug]\nInclude = /etc/pacman.d/mirrorlist-debug" >> /mnt/etc/pacman.conf
 				printf "\n[galaxy-debug]\nInclude = /etc/pacman.d/mirrorlist-debug" >> /mnt/etc/pacman.conf
 				printf "\n[lib32-debug]\nInclude = /etc/pacman.d/mirrorlist-debug" >> /mnt/etc/pacman.conf
-				printf "Server = https://debuginfod.artixlinux.org/\$repo/os/\$arch" >>  >> /mnt/etc/pacman.d/mirrorlist-debug
+				printf "Server = https://debuginfod.artixlinux.org/\$repo/os/\$arch" >> /mnt/etc/pacman.d/mirrorlist-debug
 				$CHROOTC "pacman --needed --noconfirm -Syu"
 			fi
 		fi
