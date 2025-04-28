@@ -198,12 +198,16 @@ else
 	CHROOT="arch-chroot /mnt /bin/bash"
 fi
 
+
+# Enabling Sudo For :wheel Group
+$CHROOTC "sed -i s/'# %wheel ALL=(ALL:ALL) ALL'/'%wheel ALL=(ALL:ALL) ALL'/g /etc/sudoers"
+
 ## Managing Localtime and Timezone
 rm -rf /mnt/etc/localtime
 $CHROOTC "ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime"
 
 ## Managing Users and Passwords
-$CHROOTC "useradd -m -g users -G wheel $USERNAME"
+$CHROOTC "useradd -m -G wheel $USERNAME"
 echo "Enter a password for $USERNAME"
 $CHROOTC -c "passwd $USERNAME"
 clear
@@ -399,7 +403,7 @@ if [ "$EXTRA" != "N" ] && [ "$EXTRA" != "n" ]; then
 	if [ "$ENVIRONMENT" -ge 1 ] && [ "$ENVIRONMENT" -le 7 ]; then
 		printf "Do you want to Xorg drivers? [Y/n]" && read -r XORG
 		if [ "$XORG" != "N" ] && [ "$XORG" != "n" ]; then
-			"$CHROOTC" "pacman --needed -S xorg-drivers"
+			$CHROOTC "pacman --needed -S xorg-drivers"
 		fi
 		clear
 	fi
